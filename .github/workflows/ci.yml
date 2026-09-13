@@ -28,3 +28,6 @@ jobs:
 
       - name: Build
         run: dotnet build Fynd.Api.csproj --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test Fynd.Api.csproj --no-build --configuration Release
