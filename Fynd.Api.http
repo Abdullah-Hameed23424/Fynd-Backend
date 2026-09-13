@@ -1,0 +1,6 @@
+@Fynd.Api_HostAddress = http://localhost:5021
+
+GET {{Fynd.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
