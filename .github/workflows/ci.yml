@@ -11,7 +11,6 @@ name: Fynd CI
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -40,3 +39,12 @@ jobs:
         with:
           name: fynd-api
           path: ./publish
+
+      - name: Deploy to MonsterASP
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: rasmusbuchholdt/simply-web-deploy@2.1.0
+        with:
+          website-name: ${{ secrets.WEBSITE_NAME }}
+          server-computer-name: ${{ secrets.SERVER_COMPUTER_NAME }}
+          server-username: ${{ secrets.SERVER_USERNAME }}
+          server-password: ${{ secrets.SERVER_PASSWORD }}
