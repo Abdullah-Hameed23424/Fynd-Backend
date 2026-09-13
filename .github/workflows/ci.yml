@@ -31,3 +31,6 @@ jobs:
 
       - name: Test
         run: dotnet test Fynd.Api.csproj --no-build --configuration Release
+
+      - name: Publish
+        run: dotnet publish Fynd.Api.csproj --no-build --configuration Release --output ./publish
