@@ -24,7 +24,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore
-        run: dotnet restore Fynd.Api/Fynd.Api.csproj
+        run: dotnet restore Fynd.Api.csproj
 
       - name: Build
-        run: dotnet build Fynd.Api/Fynd.Api.csproj --no-restore --configuration Release
+        run: dotnet build Fynd.Api.csproj --no-restore --configuration Release
