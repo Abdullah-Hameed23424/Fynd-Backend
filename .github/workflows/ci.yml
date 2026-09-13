@@ -34,3 +34,9 @@ jobs:
 
       - name: Publish
         run: dotnet publish Fynd.Api.csproj --no-build --configuration Release --output ./publish
+
+      - name: Upload published app
+        uses: actions/upload-artifact@v4
+        with:
+          name: fynd-api
+          path: ./publish
