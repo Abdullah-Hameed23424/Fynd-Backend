@@ -275,8 +275,8 @@ namespace Fynd.Api.Services
         private static string GenerateOtp()
         {
             return RandomNumberGenerator
-                .GetInt32(0, 1000000)
-                .ToString("D6");
+                .GetInt32(0, 10000)
+                .ToString("D4");
         
         }
 
