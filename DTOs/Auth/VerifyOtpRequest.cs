@@ -9,7 +9,7 @@ namespace Fynd.Api.DTOs.Auth
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(6, MinimumLength = 6)]
+        [StringLength(4, MinimumLength = 4)]
         public string Otp { get; set; } = string.Empty;
     }
 }
