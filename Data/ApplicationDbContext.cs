@@ -16,9 +16,59 @@ namespace Fynd.Api.Data
 
         public DbSet<User> Users { get; set; }
 
+        public DbSet<Category> Categories { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Category>().HasData(
+                new Category
+                {
+                    Id = 1,
+                    Name = "Electronics"
+                },
+                new Category
+                {
+                    Id = 2,
+                    Name = "Documents"
+                },
+                new Category
+                {
+                    Id = 3,
+                    Name = "Keys"
+                },
+                new Category
+                {
+                    Id = 4,
+                    Name = "Wallets"
+                },
+                new Category
+                {
+                    Id = 5,
+                    Name = "Bags"
+                },
+                new Category
+                {
+                    Id = 6,
+                    Name = "Clothing"
+                },
+                new Category
+                {
+                    Id = 7,
+                    Name = "Jewelry"
+                },
+                new Category
+                {
+                    Id = 8,
+                    Name = "Pets"
+                },
+                new Category
+                {
+                    Id = 9,
+                    Name = "Other"
+                }
+            );
 
             modelBuilder.Entity<LostItem>()
                 .HasOne(x => x.User)
@@ -32,5 +82,8 @@ namespace Fynd.Api.Data
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
+
+
     }
 }
+

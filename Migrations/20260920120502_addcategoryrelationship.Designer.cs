@@ -4,6 +4,7 @@ using Fynd.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Fynd.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260920120502_addcategoryrelationship")]
+    partial class addcategoryrelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,72 +33,13 @@ namespace Fynd.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2026, 9, 20, 12, 30, 56, 142, DateTimeKind.Utc).AddTicks(8072),
-                            Name = "Electronics"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2026, 9, 20, 12, 30, 56, 142, DateTimeKind.Utc).AddTicks(8077),
-                            Name = "Documents"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CreatedAt = new DateTime(2026, 9, 20, 12, 30, 56, 142, DateTimeKind.Utc).AddTicks(8079),
-                            Name = "Keys"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            CreatedAt = new DateTime(2026, 9, 20, 12, 30, 56, 142, DateTimeKind.Utc).AddTicks(8080),
-                            Name = "Wallets"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            CreatedAt = new DateTime(2026, 9, 20, 12, 30, 56, 142, DateTimeKind.Utc).AddTicks(8082),
-                            Name = "Bags"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            CreatedAt = new DateTime(2026, 9, 20, 12, 30, 56, 142, DateTimeKind.Utc).AddTicks(8083),
-                            Name = "Clothing"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            CreatedAt = new DateTime(2026, 9, 20, 12, 30, 56, 142, DateTimeKind.Utc).AddTicks(8085),
-                            Name = "Jewelry"
-                        },
-                        new
-                        {
-                            Id = 8,
-                            CreatedAt = new DateTime(2026, 9, 20, 12, 30, 56, 142, DateTimeKind.Utc).AddTicks(8086),
-                            Name = "Pets"
-                        },
-                        new
-                        {
-                            Id = 9,
-                            CreatedAt = new DateTime(2026, 9, 20, 12, 30, 56, 142, DateTimeKind.Utc).AddTicks(8088),
-                            Name = "Other"
-                        });
+                    b.ToTable("Category");
                 });
 
             modelBuilder.Entity("Fynd.Api.Models.FoundItem", b =>

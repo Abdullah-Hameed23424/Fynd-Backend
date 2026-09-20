@@ -32,6 +32,10 @@ namespace Fynd.Api.Models
 
         public User User { get; set; } = null!;
 
+        public int CategoryId { get; set; }
+
+        public Category Category { get; set; } = null!;
+
         [Url]
         [StringLength(500)]
         public string? ImageUrl { get; set; }
