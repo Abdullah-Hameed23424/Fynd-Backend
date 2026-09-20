@@ -54,6 +54,7 @@ builder.Services.AddScoped<IFoundItemService, FoundItemService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IHomeService, HomeService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
