@@ -23,6 +23,8 @@ namespace Fynd.Api.DTOs.LostItem
         public LostItemPriority Priority { get; set; }
             = LostItemPriority.Medium;
 
+        public int CategoryId { get; set; }
+
         [Url]
         [StringLength(500)]
         public string? ImageUrl { get; set; }

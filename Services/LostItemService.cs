@@ -28,6 +28,7 @@ namespace Fynd.Api.Services
                 Priority = request.Priority,
                 ImageUrl = request.ImageUrl?.Trim(),
 
+                CategoryId = request.CategoryId,
                 UserId = userId,
                 Status = LostItemStatus.Lost,
                 CreatedAt = DateTime.UtcNow

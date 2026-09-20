@@ -29,6 +29,8 @@ namespace Fynd.Api.Services
                 ImageUrl = request.ImageUrl?.Trim(),
 
                 UserId = userId,
+                CategoryId = request.CategoryId,
+
                 Status = FoundItemStatus.Found,
                 CreatedAt = DateTime.UtcNow
             };
