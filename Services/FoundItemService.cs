@@ -39,6 +39,10 @@ namespace Fynd.Api.Services
 
             await _context.SaveChangesAsync();
 
+            await _context.Entry(item)
+                .Reference(x => x.Category)
+                .LoadAsync();
+
             return MapToResponse(item);
         }
 
@@ -46,6 +50,7 @@ namespace Fynd.Api.Services
         {
             var items = await _context.FoundItems
                 .AsNoTracking()
+                .Include(x => x.Category)
                 .OrderByDescending(x => x.CreatedAt)
                 .ToListAsync();
 
@@ -56,6 +61,7 @@ namespace Fynd.Api.Services
         {
             var item = await _context.FoundItems
                 .AsNoTracking()
+                .Include(x => x.Category)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (item == null)
@@ -87,6 +93,7 @@ namespace Fynd.Api.Services
             item.FoundAt = request.FoundAt;
             item.Priority = request.Priority;
             item.ImageUrl = request.ImageUrl?.Trim();
+            item.CategoryId = request.CategoryId;
 
             await _context.SaveChangesAsync();
 
@@ -127,7 +134,9 @@ namespace Fynd.Api.Services
                 Priority = item.Priority,
                 CreatedAt = item.CreatedAt,
                 UserId = item.UserId,
-                ImageUrl = item.ImageUrl
+                ImageUrl = item.ImageUrl,
+                CategoryId = item.CategoryId,
+                CategoryName = item.Category.Name
             };
         }
     }

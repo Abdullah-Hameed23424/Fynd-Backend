@@ -22,6 +22,10 @@ namespace Fynd.Api.DTOs.LostItem
 
         public int UserId { get; set; }
 
+        public int CategoryId { get; set; }
+
+        public string CategoryName { get; set; } = string.Empty;
+
         public string? ImageUrl { get; set; }
     }
 }

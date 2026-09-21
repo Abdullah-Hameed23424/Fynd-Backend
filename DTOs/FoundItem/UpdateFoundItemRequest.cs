@@ -23,6 +23,8 @@ namespace Fynd.Api.DTOs.FoundItem
         [Required]
         public FoundItemPriority Priority { get; set; }
 
+        public int CategoryId { get; set; }
+
         [Url]
         [StringLength(500)]
         public string? ImageUrl { get; set; }
