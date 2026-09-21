@@ -17,6 +17,7 @@ namespace Fynd.Api.Services
         public async Task<HomeResponse> GetHomeAsync()
         {
             var lostItems = await _context.LostItems
+                .Include(x => x.Category)
                 .OrderByDescending(x => x.CreatedAt)
                 .Take(10)
                 .Select(x => new RecentPosts
@@ -28,11 +29,13 @@ namespace Fynd.Api.Services
                     Type = PostType.Lost,
                     CreatedAt = x.CreatedAt,
                     ImageUrl = x.ImageUrl,
-                    CategoryId = x.CategoryId
+                    CategoryId = x.CategoryId,
+                    CategoryName = x.Category.Name
                 })
                 .ToListAsync();
 
             var foundItems = await _context.FoundItems
+                .Include(x => x.Category)
                 .OrderByDescending(x => x.CreatedAt)
                 .Take(10)
                 .Select(x => new RecentPosts
@@ -44,7 +47,8 @@ namespace Fynd.Api.Services
                     Type = PostType.Found,
                     CreatedAt = x.CreatedAt,
                     ImageUrl = x.ImageUrl,
-                    CategoryId = x.CategoryId
+                    CategoryId = x.CategoryId,
+                    CategoryName = x.Category.Name
                 })
                 .ToListAsync();
 

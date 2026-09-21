@@ -61,7 +61,7 @@ namespace Fynd.Api.Services
         {
             var item = await _context.FoundItems
                 .AsNoTracking()
-                .Include(x => x.Category)
+                .Include(x => x.Category)   
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (item == null)
