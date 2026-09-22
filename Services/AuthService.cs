@@ -21,12 +21,16 @@ namespace Fynd.Api.Services
 
         private static readonly ConcurrentDictionary<string, OtpData> _otpStore = new();
 
+        private readonly ITokenService _tokenService;
+
         public AuthService(
             ApplicationDbContext context,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ITokenService tokenService)
         {
             _context = context;
             _configuration = configuration;
+            _tokenService = tokenService;
             _passwordHasher = new PasswordHasher<User>();
         }
 
@@ -42,7 +46,9 @@ namespace Fynd.Api.Services
                 .FirstOrDefaultAsync(x => x.Email.ToLower() == email);
 
             if (existingUser != null)
-                throw new InvalidOperationException("Email is already registered.");
+                throw new InvalidOperationException(
+                    "Email is already registered."
+                );
 
             var user = new User
             {
@@ -60,14 +66,31 @@ namespace Fynd.Api.Services
 
             await _context.SaveChangesAsync();
 
-            var token = GenerateJwtToken(user);
+            var accessToken = _tokenService.GenerateAccessToken(user);
+
+            var refreshToken = _tokenService.GenerateRefreshToken();
+
+            var refreshTokenHash =
+                _tokenService.HashRefreshToken(refreshToken);
+
+            var refreshTokenEntity = new RefreshToken
+            {
+                TokenHash = refreshTokenHash,
+                ExpiresAt = DateTime.UtcNow.AddDays(30),
+                UserId = user.Id
+            };
+
+            _context.RefreshTokens.Add(refreshTokenEntity);
+
+            await _context.SaveChangesAsync();
 
             return new AuthResponse
             {
                 Id = user.Id,
                 FullName = user.UserName,
                 Email = user.Email,
-                Token = token
+                AccessToken = accessToken,
+                RefreshToken = refreshToken
             };
         }
 
@@ -95,14 +118,86 @@ namespace Fynd.Api.Services
             if (result == PasswordVerificationResult.Failed)
                 return null;
 
-            var token = GenerateJwtToken(user);
+            var accessToken = _tokenService.GenerateAccessToken(user);
+
+            var refreshToken = _tokenService.GenerateRefreshToken();
+
+            var refreshTokenHash =
+                _tokenService.HashRefreshToken(refreshToken);
+
+            var refreshTokenEntity = new RefreshToken
+            {
+                TokenHash = refreshTokenHash,
+                ExpiresAt = DateTime.UtcNow.AddDays(30),
+                UserId = user.Id
+            };
+
+            _context.RefreshTokens.Add(refreshTokenEntity);
+
+            await _context.SaveChangesAsync();
 
             return new AuthResponse
             {
                 Id = user.Id,
                 FullName = user.UserName,
                 Email = user.Email,
-                Token = token
+                AccessToken = accessToken,
+                RefreshToken = refreshToken
+            };
+        }
+
+        public async Task<AuthResponse?> RefreshTokenAsync(
+            RefreshTokenRequest request)
+        {
+            var refreshTokenHash =
+                _tokenService.HashRefreshToken(request.RefreshToken);
+
+            var refreshToken = await _context.RefreshTokens
+                .Include(x => x.User)
+                .FirstOrDefaultAsync(x => x.TokenHash == refreshTokenHash);
+
+            if (refreshToken == null)
+                return null;
+
+            if (refreshToken.RevokedAt != null)
+                return null;
+
+            if (refreshToken.ExpiresAt <= DateTime.UtcNow)
+                return null;
+
+            var user = refreshToken.User;
+
+            // Revoke old refresh token
+            refreshToken.RevokedAt = DateTime.UtcNow;
+
+            // Generate new tokens
+            var newAccessToken =
+                _tokenService.GenerateAccessToken(user);
+
+            var newRefreshToken =
+                _tokenService.GenerateRefreshToken();
+
+            var newRefreshTokenHash =
+                _tokenService.HashRefreshToken(newRefreshToken);
+
+            var newRefreshTokenEntity = new RefreshToken
+            {
+                TokenHash = newRefreshTokenHash,
+                ExpiresAt = DateTime.UtcNow.AddDays(30),
+                UserId = user.Id
+            };
+
+            _context.RefreshTokens.Add(newRefreshTokenEntity);
+
+            await _context.SaveChangesAsync();
+
+            return new AuthResponse
+            {
+                Id = user.Id,
+                FullName = user.UserName,
+                Email = user.Email,
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken
             };
         }
 
@@ -216,58 +311,6 @@ namespace Fynd.Api.Services
             return true;
         }
 
-
-        // =========================
-        // JWT
-        // =========================
-
-        private string GenerateJwtToken(User user)
-        {
-            var jwtKey = _configuration["Jwt:Key"];
-
-            if (string.IsNullOrWhiteSpace(jwtKey))
-                throw new InvalidOperationException(
-                    "JWT Key is not configured."
-                );
-
-            var claims = new[]
-            {
-                new Claim(
-                    ClaimTypes.NameIdentifier,
-                    user.Id.ToString()
-                ),
-
-                new Claim(
-                    ClaimTypes.Name,
-                    user.UserName
-                ),
-
-                new Claim(
-                    ClaimTypes.Email,
-                    user.Email
-                )
-            };
-
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtKey)
-            );
-
-            var credentials = new SigningCredentials(
-                key,
-                SecurityAlgorithms.HmacSha256
-            );
-
-            var token = new JwtSecurityToken(
-                claims: claims,
-                expires: DateTime.UtcNow.AddHours(2),
-                signingCredentials: credentials
-            );
-
-            return new JwtSecurityTokenHandler()
-                .WriteToken(token);
-        }
-
-
         // =========================
         // OTP GENERATOR
         // =========================
@@ -294,9 +337,23 @@ namespace Fynd.Api.Services
             public bool IsResetToken { get; set; }
         }
 
-        public Task LogoutAsync()
+        public async Task LogoutAsync(string refreshToken)
         {
-            return Task.CompletedTask;
+            var refreshTokenHash =
+                _tokenService.HashRefreshToken(refreshToken);
+
+            var token = await _context.RefreshTokens
+                .FirstOrDefaultAsync(x => x.TokenHash == refreshTokenHash);
+
+            if (token == null)
+                return;
+
+            if (token.RevokedAt != null)
+                return;
+
+            token.RevokedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
         }
     }
 }

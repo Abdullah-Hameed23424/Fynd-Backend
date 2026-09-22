@@ -8,12 +8,15 @@ namespace Fynd.Api.Services.Interfaces
 
         Task<AuthResponse?> LoginAsync(LoginRequest request);
 
+        Task<AuthResponse?> RefreshTokenAsync(
+            RefreshTokenRequest request);
+
         Task<string?> ForgotPasswordAsync(ForgotPasswordRequest request);
 
         Task<string?> VerifyOtpAsync(VerifyOtpRequest request);
 
         Task<bool> ResetPasswordAsync(ResetPasswordRequest request);
 
-        Task LogoutAsync();
+        Task LogoutAsync(string refreshToken);
     }
 }

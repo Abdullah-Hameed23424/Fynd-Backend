@@ -56,6 +56,24 @@ namespace Fynd.Api.Controllers
             return Ok(response);
         }
 
+        [HttpPost("refresh")]
+        public async Task<ActionResult<AuthResponse>> RefreshToken(
+            RefreshTokenRequest request)
+        {
+            var response = await _authService
+                .RefreshTokenAsync(request);
+
+            if (response == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "Invalid or expired refresh token."
+                });
+            }
+
+            return Ok(response);
+        }
+
 
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(
@@ -132,9 +150,12 @@ namespace Fynd.Api.Controllers
 
         [Authorize]
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> Logout(
+            RefreshTokenRequest request)
         {
-            await _authService.LogoutAsync();
+            await _authService.LogoutAsync(
+                request.RefreshToken
+            );
 
             return Ok(new
             {
