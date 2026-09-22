@@ -55,7 +55,7 @@ namespace Fynd.Api.Services
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(2),
+                expires: DateTime.UtcNow.AddSeconds(10),
                 signingCredentials: credentials
             );
 
