@@ -19,7 +19,7 @@ namespace Fynd.Api.Controllers
             _postService = postService;
         }
 
-        [HttpGet]
+        [HttpGet("recent")]
         public async Task<ActionResult<IEnumerable<PostResponse>>> GetGetRecentPostsAsync()
         {
             var items = await _postService.GetRecentPostsAsync();
