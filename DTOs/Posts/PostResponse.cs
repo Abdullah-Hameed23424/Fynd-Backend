@@ -13,9 +13,13 @@ namespace Fynd.Api.DTOs.Posts
 
         public string Location { get; set; } = string.Empty;
 
-        public DateTime Date { get; set; }
-
         public PostType Type { get; set; }
+
+        public LostItemStatus? LostStatus { get; set; }
+
+        public FoundItemStatus? FoundStatus { get; set; }
+
+        public DateTime Date { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
@@ -26,6 +30,5 @@ namespace Fynd.Api.DTOs.Posts
         public string CategoryName { get; set; } = string.Empty;
 
         public string? ImageUrl { get; set; }
-
     }
 }
