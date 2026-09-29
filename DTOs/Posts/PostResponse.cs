@@ -25,6 +25,8 @@ namespace Fynd.Api.DTOs.Posts
 
         public int UserId { get; set; }
 
+        public string UserMail { get; set; } = string.Empty;
+
         public int CategoryId { get; set; }
 
         public string CategoryName { get; set; } = string.Empty;

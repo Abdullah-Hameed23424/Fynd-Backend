@@ -319,7 +319,8 @@ namespace Fynd.Api.Services
 
                         Date = x.LostAt,
 
-                        UserId = x.UserId
+                        UserId = x.UserId,
+                        UserMail = x.User.Email
                     })
                     .FirstOrDefaultAsync();
             }
@@ -349,7 +350,8 @@ namespace Fynd.Api.Services
 
                         Date = x.FoundAt,
 
-                        UserId = x.UserId
+                        UserId = x.UserId,
+                        UserMail = x.User.Email
                     })
                     .FirstOrDefaultAsync();
             }
