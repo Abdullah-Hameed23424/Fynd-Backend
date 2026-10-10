@@ -5,8 +5,32 @@ using Fynd.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Existing Fynd service registrations remain here.
+
+var firebaseProjectId =
+    builder.Configuration["Firebase:ProjectId"];
+
+if (string.IsNullOrWhiteSpace(firebaseProjectId))
+{
+    throw new InvalidOperationException(
+        "Firebase:ProjectId is missing from configuration.");
+}
+
+if (FirebaseApp.DefaultInstance is null)
+{
+    FirebaseApp.Create(new AppOptions
+    {
+        Credential = GoogleCredential.GetApplicationDefault(),
+        ProjectId = firebaseProjectId
+    });
+}
+
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -47,7 +71,33 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT access token."
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 builder.Services.AddScoped<ILostItemService, LostItemService>();
 builder.Services.AddScoped<IFoundItemService, FoundItemService>();
@@ -57,6 +107,9 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<
+    IFirebaseNotificationService,
+    FirebaseNotificationService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

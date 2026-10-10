@@ -20,6 +20,8 @@ namespace Fynd.Api.Data
 
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
+        public DbSet<UserDeviceToken> UserDeviceTokens { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -93,6 +95,25 @@ namespace Fynd.Api.Data
             modelBuilder.Entity<RefreshToken>()
                .HasIndex(x => x.TokenHash)
                .IsUnique();
+
+            modelBuilder.Entity<UserDeviceToken>()
+                .HasOne(x => x.User)
+                .WithMany(x => x.DeviceTokens)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserDeviceToken>()
+                .HasIndex(x => x.TokenHash)
+                .IsUnique();
+
+            modelBuilder.Entity<UserDeviceToken>()
+                .HasIndex(x => x.InstallationId)
+                .IsUnique();
+
+            modelBuilder.Entity<UserDeviceToken>()
+                .Property(x => x.FcmToken)
+                .IsRequired()
+                .HasMaxLength(4096);
         }
 
 

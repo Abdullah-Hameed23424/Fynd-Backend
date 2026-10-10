@@ -45,55 +45,55 @@ namespace Fynd.Api.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 9, 22, 11, 37, 4, 46, DateTimeKind.Utc).AddTicks(2762),
+                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7954),
                             Name = "Electronics"
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 9, 22, 11, 37, 4, 46, DateTimeKind.Utc).AddTicks(2766),
+                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7959),
                             Name = "Documents"
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 9, 22, 11, 37, 4, 46, DateTimeKind.Utc).AddTicks(2767),
+                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7961),
                             Name = "Keys"
                         },
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2026, 9, 22, 11, 37, 4, 46, DateTimeKind.Utc).AddTicks(2768),
+                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7963),
                             Name = "Wallets"
                         },
                         new
                         {
                             Id = 5,
-                            CreatedAt = new DateTime(2026, 9, 22, 11, 37, 4, 46, DateTimeKind.Utc).AddTicks(2770),
+                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7965),
                             Name = "Bags"
                         },
                         new
                         {
                             Id = 6,
-                            CreatedAt = new DateTime(2026, 9, 22, 11, 37, 4, 46, DateTimeKind.Utc).AddTicks(2786),
+                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7966),
                             Name = "Clothing"
                         },
                         new
                         {
                             Id = 7,
-                            CreatedAt = new DateTime(2026, 9, 22, 11, 37, 4, 46, DateTimeKind.Utc).AddTicks(2788),
+                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7968),
                             Name = "Jewelry"
                         },
                         new
                         {
                             Id = 8,
-                            CreatedAt = new DateTime(2026, 9, 22, 11, 37, 4, 46, DateTimeKind.Utc).AddTicks(2790),
+                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7969),
                             Name = "Pets"
                         },
                         new
                         {
                             Id = 9,
-                            CreatedAt = new DateTime(2026, 9, 22, 11, 37, 4, 46, DateTimeKind.Utc).AddTicks(2791),
+                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7971),
                             Name = "Other"
                         });
                 });
@@ -274,6 +274,54 @@ namespace Fynd.Api.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Fynd.Api.Models.UserDeviceToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FcmToken")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("InstallationId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InstallationId")
+                        .IsUnique();
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserDeviceTokens");
+                });
+
             modelBuilder.Entity("Fynd.Api.Models.FoundItem", b =>
                 {
                     b.HasOne("Fynd.Api.Models.Category", "Category")
@@ -323,6 +371,17 @@ namespace Fynd.Api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Fynd.Api.Models.UserDeviceToken", b =>
+                {
+                    b.HasOne("Fynd.Api.Models.User", "User")
+                        .WithMany("DeviceTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Fynd.Api.Models.Category", b =>
                 {
                     b.Navigation("FoundItems");
@@ -332,6 +391,8 @@ namespace Fynd.Api.Migrations
 
             modelBuilder.Entity("Fynd.Api.Models.User", b =>
                 {
+                    b.Navigation("DeviceTokens");
+
                     b.Navigation("FoundItems");
 
                     b.Navigation("LostItems");

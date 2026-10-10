@@ -29,5 +29,7 @@ namespace Fynd.Api.Models
         public ICollection<FoundItem> FoundItems { get; set; } = new List<FoundItem>();
 
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
+        public ICollection<UserDeviceToken> DeviceTokens { get; set; } = new List<UserDeviceToken>();
     }
 }
