@@ -22,14 +22,43 @@ if (string.IsNullOrWhiteSpace(firebaseProjectId))
         "Firebase:ProjectId is missing from configuration.");
 }
 
+
 if (FirebaseApp.DefaultInstance is null)
 {
+    // ContentRootPath is expected to be the wwwroot directory.
+    var siteRoot = Directory.GetParent(
+        builder.Environment.ContentRootPath)?.FullName;
+
+    if (string.IsNullOrWhiteSpace(siteRoot))
+    {
+        throw new InvalidOperationException(
+            "Could not determine the website root directory.");
+    }
+
+    var firebaseCredentialsPath = Path.Combine(
+        siteRoot,
+        "private",
+        "fynd-app-8165f-firebase-adminsdk-fbsvc-bfa40828c5.json"
+    );
+
+    if (!File.Exists(firebaseCredentialsPath))
+    {
+        throw new FileNotFoundException(
+            "Firebase service account JSON file was not found. " +
+            "Check the private folder path on the hosting server.",
+            firebaseCredentialsPath
+        );
+    }
+
     FirebaseApp.Create(new AppOptions
     {
-        Credential = GoogleCredential.GetApplicationDefault(),
+        Credential = GoogleCredential.FromFile(
+            firebaseCredentialsPath
+        ),
         ProjectId = firebaseProjectId
     });
 }
+
 
 
 // Add services to the container.
