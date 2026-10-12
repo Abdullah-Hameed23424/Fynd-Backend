@@ -1,5 +1,4 @@
 ﻿using Fynd.Api.Data;
-using Fynd.Api.DTOs.FoundItem;
 using Fynd.Api.DTOs.Home;
 using Fynd.Api.DTOs.Posts;
 using Fynd.Api.Models;

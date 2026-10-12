@@ -1,5 +1,4 @@
-﻿using Fynd.Api.DTOs.FoundItem;
-using Fynd.Api.DTOs.Home;
+﻿using Fynd.Api.DTOs.Home;
 using Fynd.Api.DTOs.Posts;
 
 namespace Fynd.Api.Services.Interfaces

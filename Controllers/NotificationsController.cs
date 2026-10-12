@@ -129,6 +129,7 @@ namespace Fynd.Api.Controllers
             });
         }
 
+        // POST: api/notifications/test
         [HttpPost("test")]
         public async Task<IActionResult> SendTestNotification(
             [FromBody] SendNotificationRequest request,
@@ -142,12 +143,13 @@ namespace Fynd.Api.Controllers
             if (!ModelState.IsValid)
                 return ValidationProblem(ModelState);
 
-            var notificationId = await _notificationService.CreateAndSendAsync(
-                userId.Value,
-                request.Title,
-                request.Body,
-                "General",
-                cancellationToken: cancellationToken);
+            var notificationId =
+                await _notificationService.CreateAndSendAsync(
+                    userId.Value,
+                    request.Title,
+                    request.Body,
+                    "General",
+                    cancellationToken: cancellationToken);
 
             return Ok(new
             {

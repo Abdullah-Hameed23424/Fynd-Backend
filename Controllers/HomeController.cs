@@ -1,5 +1,4 @@
-﻿using Fynd.Api.DTOs.FoundItem;
-using Fynd.Api.DTOs.Home;
+﻿using Fynd.Api.DTOs.Home;
 using Fynd.Api.Services;
 using Fynd.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;

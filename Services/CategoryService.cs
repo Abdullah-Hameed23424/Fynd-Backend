@@ -1,6 +1,5 @@
 ﻿using Fynd.Api.Data;
 using Fynd.Api.DTOs.Catrgory;
-using Fynd.Api.DTOs.FoundItem;
 using Fynd.Api.Models;
 using Fynd.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
