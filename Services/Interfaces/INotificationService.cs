@@ -5,6 +5,15 @@ namespace Fynd.Api.Services.Interfaces
 {
     public interface INotificationService
     {
+        Task<int> CreateAndSendAsync(
+            int userId,
+            string title,
+            string message,
+            string type = "General",
+            int? relatedItemId = null,
+            string? relatedItemType = null,
+            CancellationToken cancellationToken = default);
+
         Task<NotificationListResponse> GetNotificationsAsync(
             int userId,
             int page,

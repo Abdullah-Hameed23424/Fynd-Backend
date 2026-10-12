@@ -21,6 +21,64 @@ namespace Fynd.Api.Services
             _firebaseNotificationService = firebaseNotificationService;
         }
 
+        public async Task<int> CreateAndSendAsync(
+            int userId,
+            string title,
+            string message,
+            string type = "General",
+            int? relatedItemId = null,
+            string? relatedItemType = null,
+            CancellationToken cancellationToken = default)
+        {
+            var userExists = await _db.Users
+                .AnyAsync(x => x.Id == userId, cancellationToken);
+
+            if (!userExists)
+            {
+                throw new ArgumentException("User not found.", nameof(userId));
+            }
+
+            var notification = new Models.AppNotification
+            {
+                UserId = userId,
+                Title = title,
+                Message = message,
+                Type = type,
+                RelatedItemId = relatedItemId,
+                RelatedItemType = relatedItemType,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // أولاً نحفظ الإشعار في قاعدة البيانات.
+            _db.Notifications.Add(notification);
+            await _db.SaveChangesAsync(cancellationToken);
+
+            // بعدها نرسل Push للأجهزة المسجلة للمستخدم.
+            var devices = await _db.UserDeviceTokens
+                .Where(x => x.UserId == userId && x.IsActive)
+                .ToListAsync(cancellationToken);
+
+            foreach (var device in devices)
+            {
+                try
+                {
+                    await _firebaseNotificationService.SendAsync(
+                        device.FcmToken,
+                        title,
+                        message,
+                        cancellationToken);
+                }
+                catch (FirebaseAdmin.Messaging.FirebaseMessagingException)
+                {
+                    // فشل إرسال Push لا يلغي الإشعار المحفوظ في قاعدة البيانات.
+                    // يمكن إضافة logging ومعالجة التوكنات غير الصالحة لاحقاً.
+                }
+            }
+
+            return notification.Id;
+        }
+
         public async Task<NotificationListResponse> GetNotificationsAsync(
             int userId,
             int page,
