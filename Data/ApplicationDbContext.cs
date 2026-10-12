@@ -22,6 +22,9 @@ namespace Fynd.Api.Data
 
         public DbSet<UserDeviceToken> UserDeviceTokens { get; set; }
 
+        public DbSet<AppNotification> Notifications { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -114,9 +117,21 @@ namespace Fynd.Api.Data
                 .Property(x => x.FcmToken)
                 .IsRequired()
                 .HasMaxLength(4096);
+
+            modelBuilder.Entity<AppNotification>()
+                .HasOne(x => x.User)
+                .WithMany(x => x.Notifications)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AppNotification>()
+                .HasIndex(x => new
+                {
+                    x.UserId,
+                    x.IsRead,
+                    x.CreatedAt
+                });
         }
-
-
     }
 }
 

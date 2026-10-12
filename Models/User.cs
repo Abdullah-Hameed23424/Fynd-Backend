@@ -31,5 +31,7 @@ namespace Fynd.Api.Models
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
         public ICollection<UserDeviceToken> DeviceTokens { get; set; } = new List<UserDeviceToken>();
+
+        public ICollection<AppNotification> Notifications { get; set; } = new List<AppNotification>();
     }
 }

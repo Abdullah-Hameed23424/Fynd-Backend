@@ -1,15 +1,9 @@
 ﻿
-using Fynd.Api.Data;
+using System.Security.Claims;
 using Fynd.Api.DTOs.Notifications;
-using Fynd.Api.Models;
 using Fynd.Api.Services.Interfaces;
-using FirebaseAdmin.Messaging;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Fynd.Api.Controllers
 {
@@ -18,142 +12,182 @@ namespace Fynd.Api.Controllers
     [Authorize]
     public class NotificationsController : ControllerBase
     {
-        private readonly IFirebaseNotificationService _notificationService;
-        private readonly ApplicationDbContext _db;
+        private readonly INotificationService _notificationService;
 
         public NotificationsController(
-            IFirebaseNotificationService notificationService,
-            ApplicationDbContext db)
+            INotificationService notificationService)
         {
             _notificationService = notificationService;
-            _db = db;
         }
 
-        [HttpPost("test")]
-        public async Task<IActionResult> SendTestNotification(
-            [FromBody] SendNotificationRequest request,
-            CancellationToken cancellationToken)
+        private int? GetCurrentUserId()
         {
-            if (string.IsNullOrWhiteSpace(request.FcmToken) ||
-                string.IsNullOrWhiteSpace(request.Title) ||
-                string.IsNullOrWhiteSpace(request.Body))
-            {
-                return BadRequest(new
-                {
-                    message = "FCM token, title and body are required."
-                });
-            }
-
-            try
-            {
-                var messageId = await _notificationService.SendAsync(
-                    request.FcmToken,
-                    request.Title,
-                    request.Body,
-                    cancellationToken);
-
-                return Ok(new
-                {
-                    message = "Notification sent successfully.",
-                    messageId
-                });
-            }
-            catch (FirebaseMessagingException ex)
-            {
-                return BadRequest(new
-                {
-                    message = "Firebase could not send the notification.",
-                    error = ex.Message
-                });
-            }
-        }
-
-        [HttpPost("register-device")]
-        public async Task<IActionResult> RegisterDevice(
-            [FromBody] RegisterDeviceTokenRequest request,
-            CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrWhiteSpace(request.FcmToken) ||
-                string.IsNullOrWhiteSpace(request.InstallationId))
-            {
-                return BadRequest(new
-                {
-                    message = "FCM token and installation ID are required."
-                });
-            }
-
             var userIdClaim =
                 User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                 ?? User.FindFirst("userId")?.Value
                 ?? User.FindFirst("sub")?.Value
                 ?? User.FindFirst("id")?.Value;
 
-            if (!int.TryParse(userIdClaim, out var userId))
-            {
-                return Unauthorized(new
-                {
-                    message = "The authenticated JWT does not contain a valid user ID."
-                });
-            }
+            return int.TryParse(userIdClaim, out var userId)
+                ? userId
+                : null;
+        }
 
-            var userExists = await _db.Users
-                .AnyAsync(x => x.Id == userId, cancellationToken);
+        // GET: api/notifications?page=1&pageSize=20
+        [HttpGet]
+        public async Task<ActionResult<NotificationListResponse>>
+            GetNotifications(
+                [FromQuery] int page = 1,
+                [FromQuery] int pageSize = 20,
+                CancellationToken cancellationToken = default)
+        {
+            var userId = GetCurrentUserId();
 
-            if (!userExists)
-            {
-                return Unauthorized(new
-                {
-                    message = "The authenticated user was not found."
-                });
-            }
+            if (userId == null)
+                return Unauthorized();
 
-            var tokenHash = Convert.ToHexString(
-                SHA256.HashData(
-                    Encoding.UTF8.GetBytes(request.FcmToken)));
-
-            var byInstallation = await _db.UserDeviceTokens
-                .SingleOrDefaultAsync(
-                    x => x.InstallationId == request.InstallationId,
+            var result =
+                await _notificationService.GetNotificationsAsync(
+                    userId.Value,
+                    page,
+                    pageSize,
                     cancellationToken);
 
-            var byToken = await _db.UserDeviceTokens
-                .SingleOrDefaultAsync(
-                    x => x.TokenHash == tokenHash,
+            return Ok(result);
+        }
+
+        // GET: api/notifications/unread-count
+        [HttpGet("unread-count")]
+        public async Task<IActionResult> GetUnreadCount(
+            CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+                return Unauthorized();
+
+            var count =
+                await _notificationService.GetUnreadCountAsync(
+                    userId.Value,
                     cancellationToken);
 
-            UserDeviceToken device;
+            return Ok(new { unreadCount = count });
+        }
 
-            if (byInstallation != null &&
-                byToken != null &&
-                byInstallation.Id != byToken.Id)
-            {
-                _db.UserDeviceTokens.Remove(byInstallation);
-                device = byToken;
-            }
-            else
-            {
-                device = byInstallation ?? byToken
-                    ?? new UserDeviceToken();
+        // PATCH: api/notifications/{id}/read
+        [HttpPatch("{id:int}/read")]
+        public async Task<IActionResult> MarkAsRead(
+            int id,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
 
-                if (device.Id == 0)
+            if (userId == null)
+                return Unauthorized();
+
+            var success = await _notificationService.MarkAsReadAsync(
+                userId.Value,
+                id,
+                cancellationToken);
+
+            if (!success)
+            {
+                return NotFound(new
                 {
-                    _db.UserDeviceTokens.Add(device);
-                }
+                    message = "Notification not found."
+                });
             }
-
-            device.UserId = userId;
-            device.InstallationId = request.InstallationId;
-            device.FcmToken = request.FcmToken;
-            device.TokenHash = tokenHash;
-            device.IsActive = true;
-            device.UpdatedAt = DateTime.UtcNow;
-
-            await _db.SaveChangesAsync(cancellationToken);
 
             return Ok(new
             {
-                message = "Device token registered successfully.",
-                deviceId = device.Id
+                message = "Notification marked as read.",
+                id,
+                isRead = true
+            });
+        }
+
+        // PATCH: api/notifications/read-all
+        [HttpPatch("read-all")]
+        public async Task<IActionResult> MarkAllAsRead(
+            CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+                return Unauthorized();
+
+            var updatedCount =
+                await _notificationService.MarkAllAsReadAsync(
+                    userId.Value,
+                    cancellationToken);
+
+            return Ok(new
+            {
+                message = "All notifications marked as read.",
+                updatedCount,
+                unreadCount = 0
+            });
+        }
+
+        // POST: api/notifications/test
+        [HttpPost("test")]
+        public async Task<IActionResult> SendTestNotification(
+            [FromBody] SendNotificationRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+                return Unauthorized();
+
+            if (!ModelState.IsValid)
+                return ValidationProblem(ModelState);
+
+            var messageId = await _notificationService.SendTestAsync(
+                request.FcmToken,
+                request.Title,
+                request.Body,
+                cancellationToken);
+
+            return Ok(new
+            {
+                message = "Test notification sent.",
+                messageId
+            });
+        }
+
+        // POST: api/notifications/register-device
+        [HttpPost("register-device")]
+        public async Task<IActionResult> RegisterDevice(
+            [FromBody] RegisterDeviceTokenRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+                return Unauthorized();
+
+            if (!ModelState.IsValid)
+                return ValidationProblem(ModelState);
+
+            var deviceId = await _notificationService.RegisterDeviceAsync(
+                userId.Value,
+                request.FcmToken,
+                request.InstallationId,
+                cancellationToken);
+
+            if (deviceId == null)
+            {
+                return NotFound(new
+                {
+                    message = "User not found."
+                });
+            }
+
+            return Ok(new
+            {
+                message = "Device registered successfully.",
+                deviceId
             });
         }
     }

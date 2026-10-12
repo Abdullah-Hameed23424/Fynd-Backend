@@ -22,6 +22,55 @@ namespace Fynd.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Fynd.Api.Models.AppNotification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("RelatedItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RelatedItemType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "IsRead", "CreatedAt");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("Fynd.Api.Models.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -45,55 +94,55 @@ namespace Fynd.Api.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7954),
+                            CreatedAt = new DateTime(2026, 10, 12, 12, 35, 59, 935, DateTimeKind.Utc).AddTicks(7273),
                             Name = "Electronics"
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7959),
+                            CreatedAt = new DateTime(2026, 10, 12, 12, 35, 59, 935, DateTimeKind.Utc).AddTicks(7278),
                             Name = "Documents"
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7961),
+                            CreatedAt = new DateTime(2026, 10, 12, 12, 35, 59, 935, DateTimeKind.Utc).AddTicks(7280),
                             Name = "Keys"
                         },
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7963),
+                            CreatedAt = new DateTime(2026, 10, 12, 12, 35, 59, 935, DateTimeKind.Utc).AddTicks(7281),
                             Name = "Wallets"
                         },
                         new
                         {
                             Id = 5,
-                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7965),
+                            CreatedAt = new DateTime(2026, 10, 12, 12, 35, 59, 935, DateTimeKind.Utc).AddTicks(7282),
                             Name = "Bags"
                         },
                         new
                         {
                             Id = 6,
-                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7966),
+                            CreatedAt = new DateTime(2026, 10, 12, 12, 35, 59, 935, DateTimeKind.Utc).AddTicks(7284),
                             Name = "Clothing"
                         },
                         new
                         {
                             Id = 7,
-                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7968),
+                            CreatedAt = new DateTime(2026, 10, 12, 12, 35, 59, 935, DateTimeKind.Utc).AddTicks(7285),
                             Name = "Jewelry"
                         },
                         new
                         {
                             Id = 8,
-                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7969),
+                            CreatedAt = new DateTime(2026, 10, 12, 12, 35, 59, 935, DateTimeKind.Utc).AddTicks(7287),
                             Name = "Pets"
                         },
                         new
                         {
                             Id = 9,
-                            CreatedAt = new DateTime(2026, 10, 10, 13, 15, 43, 256, DateTimeKind.Utc).AddTicks(7971),
+                            CreatedAt = new DateTime(2026, 10, 12, 12, 35, 59, 935, DateTimeKind.Utc).AddTicks(7288),
                             Name = "Other"
                         });
                 });
@@ -322,6 +371,17 @@ namespace Fynd.Api.Migrations
                     b.ToTable("UserDeviceTokens");
                 });
 
+            modelBuilder.Entity("Fynd.Api.Models.AppNotification", b =>
+                {
+                    b.HasOne("Fynd.Api.Models.User", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Fynd.Api.Models.FoundItem", b =>
                 {
                     b.HasOne("Fynd.Api.Models.Category", "Category")
@@ -396,6 +456,8 @@ namespace Fynd.Api.Migrations
                     b.Navigation("FoundItems");
 
                     b.Navigation("LostItems");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("RefreshTokens");
                 });
