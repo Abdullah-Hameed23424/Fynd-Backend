@@ -75,18 +75,29 @@ namespace Fynd.Api.Controllers
         }
 
 
+
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(
             ForgotPasswordRequest request)
         {
-            var otp = await _authService.ForgotPasswordAsync(request);
-
-            return Ok(new
+            try
             {
-                message = "If the email exists, an OTP has been generated successfully.",
-                otp = otp
-            });
+                await _authService.ForgotPasswordAsync(request);
+
+                return Ok(new
+                {
+                    message = "If the email exists, you will receive a verification code shortly."
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Unable to process your request. Please try again later."
+                });
+            }
         }
+
 
 
         // POST: api/auth/verify-otp

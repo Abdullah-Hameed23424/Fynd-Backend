@@ -23,7 +23,10 @@ namespace Fynd.Api.Services
 
         private readonly ITokenService _tokenService;
 
+        private readonly IEmailService _emailService;
+
         public AuthService(
+            IEmailService emailService,
             ApplicationDbContext context,
             IConfiguration configuration,
             ITokenService tokenService)
@@ -32,6 +35,7 @@ namespace Fynd.Api.Services
             _configuration = configuration;
             _tokenService = tokenService;
             _passwordHasher = new PasswordHasher<User>();
+            _emailService = emailService;
         }
 
         // =========================
@@ -206,16 +210,17 @@ namespace Fynd.Api.Services
         // FORGOT PASSWORD
         // =========================
 
-        public async Task<string?> ForgotPasswordAsync(
+
+        public async Task<bool> ForgotPasswordAsync(
             ForgotPasswordRequest request)
         {
-            var email = request.Email.Trim().ToLower();
+            var email = request.Email.Trim().ToLowerInvariant();
 
             var user = await _context.Users
                 .FirstOrDefaultAsync(x => x.Email.ToLower() == email);
 
             if (user == null)
-                return null;
+                return false;
 
             var otp = GenerateOtp();
 
@@ -225,8 +230,18 @@ namespace Fynd.Api.Services
                 ExpiresAt = DateTime.UtcNow.AddMinutes(5)
             };
 
-            return otp;
+            try
+            {
+                await _emailService.SendOtpAsync(email, otp);
+                return true;
+            }
+            catch
+            {
+                _otpStore.TryRemove(email, out _);
+                throw;
+            }
         }
+
 
 
         // =========================

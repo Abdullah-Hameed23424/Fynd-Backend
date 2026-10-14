@@ -8,6 +8,7 @@ using System.Text;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.OpenApi.Models;
+using Resend;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,11 +36,13 @@ if (FirebaseApp.DefaultInstance is null)
             "Could not determine the website root directory.");
     }
 
-    var firebaseCredentialsPath = Path.Combine(
-        siteRoot,
-        "private",
-        "fynd-app-8165f-firebase-adminsdk-fbsvc-bfa40828c5.json"
-    );
+    //var firebaseCredentialsPath = Path.Combine(
+    //    siteRoot,
+    //    "private",
+    //    "fynd-app-8165f-firebase-adminsdk-fbsvc-bfa40828c5.json"
+    //);
+
+    var firebaseCredentialsPath = "C:\\Secure\\Fynd\\fynd-app-8165f-firebase-adminsdk-fbsvc-bfa40828c5.json";
 
     if (!File.Exists(firebaseCredentialsPath))
     {
@@ -135,6 +138,17 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+
+builder.Services.AddResend(options =>
+{
+    options.ApiToken =
+        builder.Configuration["Resend:ApiKey"]
+        ?? throw new InvalidOperationException(
+            "Resend API Key is missing."
+        );
+});
+
+builder.Services.AddScoped<IEmailService, EmailService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

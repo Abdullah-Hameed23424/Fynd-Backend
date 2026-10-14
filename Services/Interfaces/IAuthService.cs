@@ -11,7 +11,8 @@ namespace Fynd.Api.Services.Interfaces
         Task<AuthResponse?> RefreshTokenAsync(
             RefreshTokenRequest request);
 
-        Task<string?> ForgotPasswordAsync(ForgotPasswordRequest request);
+        Task<bool> ForgotPasswordAsync(
+            ForgotPasswordRequest request);
 
         Task<string?> VerifyOtpAsync(VerifyOtpRequest request);
 
