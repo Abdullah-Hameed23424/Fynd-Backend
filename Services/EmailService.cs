@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Resend;
 using System.Net;
 
@@ -9,13 +10,16 @@ public class EmailService : Interfaces.IEmailService
 {
     private readonly IResend _resend;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<EmailService> _logger;
 
     public EmailService(
         IResend resend,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ILogger<EmailService> logger)
     {
         _resend = resend;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task SendOtpAsync(
@@ -23,8 +27,7 @@ public class EmailService : Interfaces.IEmailService
         string otp,
         CancellationToken cancellationToken = default)
     {
-        var fromEmail =
-            _configuration["Resend:FromEmail"];
+        var fromEmail = _configuration["Resend:FromEmail"];
 
         if (string.IsNullOrWhiteSpace(fromEmail))
         {
@@ -54,6 +57,16 @@ public class EmailService : Interfaces.IEmailService
 
         message.To.Add(email);
 
-        await _resend.EmailSendAsync(message);
+        try
+        {
+            await _resend.EmailSendAsync(message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Resend failed while sending an OTP email.");
+            throw;
+        }
     }
 }
