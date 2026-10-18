@@ -10,10 +10,12 @@ namespace Fynd.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
             _authService = authService;
+            _logger = logger;
         }
 
 
@@ -75,7 +77,6 @@ namespace Fynd.Api.Controllers
         }
 
 
-
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(
             ForgotPasswordRequest request)
@@ -89,14 +90,20 @@ namespace Fynd.Api.Controllers
                     message = "If the email exists, you will receive a verification code shortly."
                 });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(
+                    ex,
+                    "An error occurred while processing forgot password."
+                );
+
                 return StatusCode(500, new
                 {
                     message = "Unable to process your request. Please try again later."
                 });
             }
         }
+
 
 
 
