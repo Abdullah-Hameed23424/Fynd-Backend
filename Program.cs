@@ -1,3 +1,4 @@
+
 using Fynd.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Fynd.Api.Services;
@@ -12,8 +13,7 @@ using Resend;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Existing Fynd service registrations remain here.
-
+// Firebase configuration
 var firebaseProjectId =
     builder.Configuration["Firebase:ProjectId"];
 
@@ -30,8 +30,14 @@ if (FirebaseApp.DefaultInstance is null)
 
     if (string.IsNullOrWhiteSpace(firebaseCredentialsPath))
     {
-        firebaseCredentialsPath =
-            @"D:\Sites\site90397\private\fynd-app-8165f-firebase-adminsdk-fbsvc-bfa40828c5.json";
+        firebaseCredentialsPath = Path.GetFullPath(
+            Path.Combine(
+                builder.Environment.ContentRootPath,
+                "..",
+                "private",
+                "fynd-app-8165f-firebase-adminsdk-fbsvc-bfa40828c5.json"
+            )
+        );
     }
 
     if (!File.Exists(firebaseCredentialsPath))
@@ -51,9 +57,10 @@ if (FirebaseApp.DefaultInstance is null)
     });
 }
 
-
-// Add services to the container.
+// Controllers
 builder.Services.AddControllers();
+
+// JWT configuration
 var jwtKey = builder.Configuration["Jwt:Key"];
 
 if (string.IsNullOrWhiteSpace(jwtKey))
@@ -63,7 +70,8 @@ if (string.IsNullOrWhiteSpace(jwtKey))
 }
 
 builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddAuthentication(
+        JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters =
@@ -85,40 +93,54 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Database configuration
+builder.Services.AddDbContext<ApplicationDbContext>(
+    options =>
+        options.UseSqlServer(
+            builder.Configuration.GetConnectionString(
+                "DefaultConnection"
+            )
+        )
+);
+
+// Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options =>
 {
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Enter your JWT access token."
-    });
-
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+    options.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
         {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Enter your JWT access token."
         }
-    });
+    );
+
+    options.AddSecurityRequirement(
+        new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        }
+    );
 });
 
+// Application services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
@@ -127,6 +149,7 @@ builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
+// Resend email configuration
 builder.Services.AddResend(options =>
 {
     options.ApiToken =
@@ -137,20 +160,19 @@ builder.Services.AddResend(options =>
 });
 
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Build application
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
+// Swagger
 app.UseSwagger();
 app.UseSwaggerUI();
-//}
 
-//app.UseHttpsRedirection();
-
+// Authentication and authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Map controllers
 app.MapControllers();
 
 app.Run();
